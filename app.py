@@ -62,9 +62,9 @@ requests_cache.install_cache('cache', backend='sqlite', expire_after=300)
 
 # Define functions
 def crawl(url):
-    #now = time.ctime(int(time.time()))
+    now = time.ctime(int(time.time()))
     response = requests.get(url)
-    #print("Time: {0} / Used Cache: {1}".format(now, response.from_cache))
+    print("Time: {0} / Used Cache: {1}".format(now, response.from_cache))
     html = response.text
     soup = bs4.BeautifulSoup(html, "html.parser")
     return soup
