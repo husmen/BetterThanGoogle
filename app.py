@@ -7,6 +7,7 @@ import urllib
 import bs4
 import requests
 import requests_cache
+import validators
 
 # import flask
 from flask import Flask, render_template, request, Markup
@@ -63,11 +64,16 @@ requests_cache.install_cache('cache', backend='sqlite', expire_after=300)
 # Define functions
 def crawl(url):
     now = time.ctime(int(time.time()))
+    print("before request")
     response = requests.get(url)
-    print("### Time: {0} / Used Cache: {1} ###".format(now, response.from_cache))
-    html = response.text
-    soup = bs4.BeautifulSoup(html, "html.parser")
-    return soup
+    print("after request")
+    if response.status_code == requests.codes.ok:
+        print("### Time: {0} / Used Cache: {1} ###".format(now, response.from_cache))
+        html = response.text
+        soup = bs4.BeautifulSoup(html, "html.parser")
+        return soup, False
+    else:
+        return False, True
 
 def clean_soup(soup, level=1):
     if level == 1:
@@ -94,7 +100,9 @@ def clean_soup(soup, level=1):
 
 def search1_1(term, source):
     count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    soup = crawl(source)
+    soup, err = crawl(source)
+    if err:
+        return count, True
     #print(soup.prettify())
     
     print("### TITLE ###")
@@ -116,8 +124,7 @@ def search1_1(term, source):
             count[2] = source_kw.lower().count(term)
             print("KEYWORDS: " + source_kw)
             
-    print("### HEADLINES ###")
-    
+    print("### HEADLINES ###")    
     soup = clean_soup(soup,1)
     for i in range(1,7):
         h = "h{}".format(i)
@@ -144,7 +151,7 @@ def search1_1(term, source):
     print("total visible: {}".format(sum(count[3:10])))
     print("total: {}".format(sum(count)))
 
-    return count
+    return count, False
 
 def result_table(count):
     result = result_template.format(*count)
@@ -157,7 +164,13 @@ def home():
     if request.method == 'POST':
         term = str(request.form['term'])
         source = str(request.form['source'])
-        count = search1_1(term,source)
+        if not validators.url(source):
+            if validators.url("http://" + source):
+                source = "http://" + source
+            else:
+                result = "INVALID LINK"
+                return render_template('index.html', term=term, source=source, result = Markup(result))
+        count, err = search1_1(term,source)
         result = result_table(count)
         return render_template('index.html', term=term, source=source, result = Markup(result))
     return render_template('index.html')
