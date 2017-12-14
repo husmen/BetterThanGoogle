@@ -35,7 +35,7 @@ table_template = '''
     <th>{}</th>
     <th>{}</th>
   </tr>
-'''.format(count_desc[0],count_desc[1],count_desc[2],count_desc[3],count_desc[4],count_desc[5],count_desc[6],count_desc[7],count_desc[8],count_desc[9],count_desc[10])
+'''.format(*count_desc)
 result_template = table_template + '''
   <tr>
     <th>{}</th>
@@ -145,7 +145,7 @@ def search1_1(term, source):
     return count
 
 def result_table(count):
-    result = result_template.format(count[0],count[1],count[2],count[3],count[4],count[5],count[6],count[7],count[8],count[9],count[10])
+    result = result_template.format(*count)
     return result
 
 # setup the route
