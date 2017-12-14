@@ -64,7 +64,7 @@ requests_cache.install_cache('cache', backend='sqlite', expire_after=300)
 def crawl(url):
     now = time.ctime(int(time.time()))
     response = requests.get(url)
-    print("Time: {0} / Used Cache: {1}".format(now, response.from_cache))
+    print("### Time: {0} / Used Cache: {1} ###".format(now, response.from_cache))
     html = response.text
     soup = bs4.BeautifulSoup(html, "html.parser")
     return soup
@@ -158,9 +158,7 @@ def home():
         term = str(request.form['term'])
         source = str(request.form['source'])
         count = search1_1(term,source)
-        #print(count)
         result = result_table(count)
-        print(result)
         return render_template('index.html', term=term, source=source, result = Markup(result))
     return render_template('index.html')
 
