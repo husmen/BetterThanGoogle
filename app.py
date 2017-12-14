@@ -18,6 +18,8 @@ app = Flask(__name__)
 term = "static"
 source = "http://localhost/sample/Static%20Website%20Definition.htm"
 count_desc = ["Title", "Description", "Keywords", "h1", "h2", "h3", "h4", "h5", "h6", "content - h", "index"]
+#count_desc[0],count_desc[1],count_desc[2],count_desc[3],count_desc[4],count_desc[5],count_desc[6],count_desc[7],count_desc[8],count_desc[9],count_desc[10]
+#count[0],count[1],count[2],count[3],count[4],count[5],count[6],count[7],count[8],count[9],count[10]
 
 # A single result template
 table_template = '''
@@ -93,7 +95,7 @@ def clean_soup(soup, level=1):
 def search1_1(term, source):
     count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     soup = crawl(source)
-    print(soup.prettify())
+    #print(soup.prettify())
     
     print("### TITLE ###")
     source_title = soup.title.string
@@ -121,18 +123,18 @@ def search1_1(term, source):
         h = "h{}".format(i)
         header = soup.find_all(h)
         if header:
-            print(h + ":")
+            #print(h + ":")
             source_h = soup.find_all(h)
             tmp = ""
             for item in source_h:
                 tmp += item.text
             count[2+i] += tmp.lower().count(term)
-            print(source_h)
+            #print(source_h)
             
     print("### BODY TEXT without headlines and junk ###")
     soup = clean_soup(soup,2)
     text = soup.body.get_text()
-    print(text)
+    #print(text)
 
     print("### COUNT ###")
     count[9] = text.lower().count(term)
