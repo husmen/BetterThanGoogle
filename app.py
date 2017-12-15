@@ -8,55 +8,12 @@ import validators
 from flask import Flask, render_template, request, Markup
 
 #import custom
-from search import search1_1, count_desc
+from search import search1, COUNT_DESC
 
 # initilize flask
 APP = Flask(__name__)
 
-# A single result template
-TABLE_TEMPLATE = '''
-<table style="width:100%">
-  <tr>
-    <th>{}</th>
-    <th>{}</th> 
-    <th>{}</th>
-    <th>{}</th>
-    <th>{}</th>
-    <th>{}</th>
-    <th>{}</th>
-    <th>{}</th>
-    <th>{}</th>
-    <th>{}</th>
-    <th>{}</th>
-  </tr>
-'''.format(*count_desc)
-RESULT_TEMPLATE = TABLE_TEMPLATE + '''
-  <tr>
-    <th>{}</th>
-    <th>{}</th> 
-    <th>{}</th>
-    <th>{}</th>
-    <th>{}</th>
-    <th>{}</th>
-    <th>{}</th>
-    <th>{}</th>
-    <th>{}</th>
-    <th>{}</th>
-    <th>{}</th>
-  </tr>
-</table>
-'''
-
-
-def result_table(count):
-    """ results table"""
-
-    result = RESULT_TEMPLATE.format(*count)
-    return result
-
-
 # setup the route
-
 @APP.route('/', methods=['GET', 'POST'])
 def home():
     """ Home Page """
@@ -66,21 +23,25 @@ def home():
 
 @APP.route('/option1', methods=['GET', 'POST'])
 def option1():
-    """ 5th Option """
+    """ 1th Option """
 
-    print("### Home Page Loaded ###")
+    print("### Option 1 Loaded ###")
     if request.method == 'POST':
-        term = str(request.form['term'])
-        source = str(request.form['source'])
+        term = str(request.form['term']).split(',')[0]
+        source = str(request.form['source']).split(',')[0]
+
         if not validators.url(source):
             if validators.url("http://" + source):
                 source = "http://" + source
             else:
-                result = "INVALID LINK"
+                result = "<b><i>INVALID LINK</i></b>"
                 return render_template('option1.html', term=term, source=source, result=Markup(result))
-        count, err = search1_1(term, source)
-        result = result_table(count)
-        return render_template('option1.html', page="Anahtar kelime saydırma", term=term, source=source, result=Markup(result))
+        err, count = search1(term, source)
+        if err:
+            result = "<b><i>INVALID LINK</i></b>"
+            return render_template('option1.html', term=term, source=source, result=Markup(result))
+        else:
+            return render_template('option1.html', page="Anahtar kelime saydırma", term=term, source=source, titles=COUNT_DESC, counts=count)
     return render_template('option1.html', page="Anahtar kelime saydırma")
 
 
@@ -88,7 +49,60 @@ def option1():
 def option2():
     """ 2nd Option """
 
-    print("### Home Page Loaded ###")
+    print("### Option 2 Loaded ###")
+
+    if request.method == 'POST':
+        results = []
+        labels = []
+        term = str(request.form['term'])
+        source = str(request.form['source'])
+        terms = term.split(',')
+        sources = source.split(',')
+        print(terms)
+        print(sources)
+        labels.append("#")
+        for trm in terms:
+            trm = trm.strip()
+            labels.append(trm + " T")
+            labels.append(trm + " I")
+        labels.append("Total Index")
+        for src in sources:
+            flag = True
+            src = src.strip()
+            res_tmp = []
+            index_sum = 0
+            index =0
+            if not validators.url(src):
+                if validators.url("http://" + src):
+                    src = "http://" + src
+                else:
+                    res_tmp.append(src)
+                    res_tmp.append(len(labels)*"-")
+                    flag = False
+                    #return render_template('option1.html', term=term, source=source, result=Markup(result))
+            if flag:
+                res_tmp.append(src)
+                for trm in terms:
+                    err, count = search1(trm, src)
+                    if err:
+                        res_tmp.append(len(labels)*"-")
+                        #return render_template('option1.html', term=term, source=source, result=Markup(result))
+                    else:
+                        res_tmp.append(count[11])
+                        res_tmp.append(count[12])
+                        index_sum += count[12]
+                                #return render_template('option1.html', page="Anahtar kelime saydırma", term=term, source=source, titles=COUNT_DESC, counts=count)
+            print("### INDEX ###")
+            for i in range(2,len(res_tmp)-1,2):
+                print("{} {} {}".format(i,index_sum,index))
+                index += res_tmp[i]*(index_sum-res_tmp[i])/index_sum
+            res_tmp.append(index)
+            results.append(res_tmp)
+        print("### RESULTS ###")
+        print(results)
+        #results_final = dict(zip(labels, results))
+        return render_template('option2.html', term=term, source=source, titles=labels, results=results)
+
     return render_template('option2.html', page="Sayfa (URL) Sıralama")
 
 

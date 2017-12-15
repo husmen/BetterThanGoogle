@@ -7,9 +7,9 @@ import requests
 import requests_cache
 
 # Global Variables
-term = "static"
-source = "http://localhost/sample/Static%20Website%20Definition.htm"
-count_desc = ["Title", "Description", "Keywords", "h1", "h2", "h3", "h4", "h5", "h6", "content - h", "index"]
+term = ""
+source = ""
+COUNT_DESC = ["Title", "Description", "Keywords", "h1", "h2", "h3", "h4", "h5", "h6", "content", "URL", "TOTAL", "index"]
 
 # Setup cache
 requests_cache.install_cache('cache', backend='sqlite', expire_after=300)
@@ -17,16 +17,23 @@ requests_cache.install_cache('cache', backend='sqlite', expire_after=300)
 # Define functions
 def crawl(url):
     now = time.ctime(int(time.time()))
-    print("before request")
-    response = requests.get(url)
-    print("after request")
-    if response.status_code == requests.codes.ok:
+    print("### before request ###")
+    try:
+        response = requests.get(url)
+    except:
+        print("### after request w/ ERROR ###")
+        return True, None
+    
+    print("### after request ###")
+    
+    #if response.status_code == requests.codes.ok:
+    if response.status_code == 200:
         print("### Time: {0} / Used Cache: {1} ###".format(now, response.from_cache))
         html = response.text
         soup = bs4.BeautifulSoup(html, "html.parser")
-        return soup, False
+        return False, soup
     else:
-        return False, True
+        return True, None
 
 def clean_soup(soup, level=1):
     if level == 1:
@@ -51,11 +58,13 @@ def clean_soup(soup, level=1):
             tmp = soup.h6.extract()
     return soup
 
-def search1_1(term, source):
-    count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    soup, err = crawl(source)
+def search1(term, source):
+    """ Search Function """
+    term = term.lower()
+    count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    err, soup = crawl(source)
     if err:
-        return count, True
+        return True, None
     #print(soup.prettify())
     
     print("### TITLE ###")
@@ -91,18 +100,17 @@ def search1_1(term, source):
             count[2+i] += tmp.lower().count(term)
             print(source_h)
             print(tmp.lower())
-            
+
     print("### BODY TEXT without headlines and junk ###")
-    soup = clean_soup(soup,2)
+    soup = clean_soup(soup, 2)
     text = soup.body.get_text()
     #print(text)
 
     print("### COUNT ###")
     count[9] = text.lower().count(term)
-    for i in range(10):
-        tmp = count_desc[i] + ": {}".format(count[i])
-        print(tmp)
-    print("total visible: {}".format(sum(count[3:10])))
-    print("total: {}".format(sum(count)))
+    count[10] = source.lower().count(term)
+    count[11] = sum(count[:11])
+    hd_ind = 0.6*count[3]+0.5*count[4]+0.4*count[5]+0.3*count[6]+0.2*count[7]+0.1*count[8]
+    count[12] = 0.15*(sum(count[:3])+count[10])+hd_ind+0.19*count[9]
 
-    return count, False
+    return False, count

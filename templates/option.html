@@ -1,0 +1,23 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="container">
+        <h1>Better Than Google Search Engine</h1>
+    
+        <br>
+        <h3>{{page}}</h3>
+        <br> {{content}}
+        <form role="form" method="post">
+            <div class="form-group">
+                <label>Search Term(s)</label>
+                <input type="text" class="form-control" name="term" placeholder="Enter search term(s)(separate with ',')" required>
+                <label>Search Website(s)</label>
+                <input type="text" class="form-control" name="source" placeholder="Enter search URL(s)(separate with ',')" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+        <br>
+        <p>Search Term: {{term}}</p>
+        <p>Source URL: {{source}}</p>
+    </div>
+    {% block content2 %}{% endblock %}
+    {% endblock %}
