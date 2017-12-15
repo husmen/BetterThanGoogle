@@ -1,29 +1,20 @@
 # import standard
 import os
-import time
-import urllib
 
 # import others
-import bs4
-import requests
-import requests_cache
 import validators
 
 # import flask
 from flask import Flask, render_template, request, Markup
 
-# initilize flask
-app = Flask(__name__)
+#import custom
+from search import search1_1, count_desc
 
-# Global Variables
-term = "static"
-source = "http://localhost/sample/Static%20Website%20Definition.htm"
-count_desc = ["Title", "Description", "Keywords", "h1", "h2", "h3", "h4", "h5", "h6", "content - h", "index"]
-#count_desc[0],count_desc[1],count_desc[2],count_desc[3],count_desc[4],count_desc[5],count_desc[6],count_desc[7],count_desc[8],count_desc[9],count_desc[10]
-#count[0],count[1],count[2],count[3],count[4],count[5],count[6],count[7],count[8],count[9],count[10]
+# initilize flask
+APP = Flask(__name__)
 
 # A single result template
-table_template = '''
+TABLE_TEMPLATE = '''
 <table style="width:100%">
   <tr>
     <th>{}</th>
@@ -39,7 +30,7 @@ table_template = '''
     <th>{}</th>
   </tr>
 '''.format(*count_desc)
-result_template = table_template + '''
+RESULT_TEMPLATE = TABLE_TEMPLATE + '''
   <tr>
     <th>{}</th>
     <th>{}</th> 
@@ -56,110 +47,27 @@ result_template = table_template + '''
 </table>
 '''
 
-#cnt = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-# Setup cache
-requests_cache.install_cache('cache', backend='sqlite', expire_after=300)
-
-# Define functions
-def crawl(url):
-    now = time.ctime(int(time.time()))
-    print("before request")
-    response = requests.get(url)
-    print("after request")
-    if response.status_code == requests.codes.ok:
-        print("### Time: {0} / Used Cache: {1} ###".format(now, response.from_cache))
-        html = response.text
-        soup = bs4.BeautifulSoup(html, "html.parser")
-        return soup, False
-    else:
-        return False, True
-
-def clean_soup(soup, level=1):
-    if level == 1:
-        while soup.find('header'):
-            tmp = soup.header.extract()
-        while soup.find('script'):
-            tmp = soup.script.extract()
-        while soup.find('footer'):
-            tmp = soup.footer.extract()
-    else:
-        while soup.find('h1'):
-            tmp = soup.h1.extract()
-        while soup.find('h2'):
-            tmp = soup.h2.extract()
-        while soup.find('h3'):
-            tmp = soup.h3.extract()
-        while soup.find('h4'):
-            tmp = soup.h4.extract()
-        while soup.find('h5'):
-            tmp = soup.h5.extract()
-        while soup.find('h6'):
-            tmp = soup.h6.extract()
-    return soup
-
-def search1_1(term, source):
-    count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    soup, err = crawl(source)
-    if err:
-        return count, True
-    #print(soup.prettify())
-    
-    print("### TITLE ###")
-    source_title = soup.title.string
-    print(source_title)
-    count[0] = source_title.lower().count(term)
-
-    print("### META ###")
-    meta = soup.find_all('meta')
-    for element in meta:
-        attributes = element.attrs
-        #print(attributes)
-        if "name" in attributes and element['name'] == "description":
-            source_desc = element['content']
-            count[1] = source_desc.lower().count(term)
-            print("DESCRIPTION: " + source_desc)
-        if "name" in attributes and element['name'] == "keywords":
-            source_kw = element['content']
-            count[2] = source_kw.lower().count(term)
-            print("KEYWORDS: " + source_kw)
-            
-    print("### HEADLINES ###")    
-    soup = clean_soup(soup,1)
-    for i in range(1,7):
-        h = "h{}".format(i)
-        header = soup.find_all(h)
-        if header:
-            #print(h + ":")
-            source_h = soup.find_all(h)
-            tmp = ""
-            for item in source_h:
-                tmp += item.text
-            count[2+i] += tmp.lower().count(term)
-            #print(source_h)
-            
-    print("### BODY TEXT without headlines and junk ###")
-    soup = clean_soup(soup,2)
-    text = soup.body.get_text()
-    #print(text)
-
-    print("### COUNT ###")
-    count[9] = text.lower().count(term)
-    for i in range(10):
-        tmp = count_desc[i] + ": {}".format(count[i])
-        print(tmp)
-    print("total visible: {}".format(sum(count[3:10])))
-    print("total: {}".format(sum(count)))
-
-    return count, False
 
 def result_table(count):
-    result = result_template.format(*count)
+    """ results table"""
+
+    result = RESULT_TEMPLATE.format(*count)
     return result
 
+
 # setup the route
-@app.route('/', methods=['GET', 'POST'])
+
+@APP.route('/', methods=['GET', 'POST'])
 def home():
+    """ Home Page """
+    print("### Home Page Loaded ###")
+    return render_template('index.html', page="Home")
+
+
+@APP.route('/option1', methods=['GET', 'POST'])
+def option1():
+    """ 5th Option """
+
     print("### Home Page Loaded ###")
     if request.method == 'POST':
         term = str(request.form['term'])
@@ -169,14 +77,38 @@ def home():
                 source = "http://" + source
             else:
                 result = "INVALID LINK"
-                return render_template('index.html', term=term, source=source, result = Markup(result))
-        count, err = search1_1(term,source)
+                return render_template('option1.html', term=term, source=source, result=Markup(result))
+        count, err = search1_1(term, source)
         result = result_table(count)
-        return render_template('index.html', term=term, source=source, result = Markup(result))
-    return render_template('index.html')
+        return render_template('option1.html', page="Anahtar kelime saydırma", term=term, source=source, result=Markup(result))
+    return render_template('option1.html', page="Anahtar kelime saydırma")
+
+
+@APP.route('/option2', methods=['GET', 'POST'])
+def option2():
+    """ 2nd Option """
+
+    print("### Home Page Loaded ###")
+    return render_template('option2.html', page="Sayfa (URL) Sıralama")
+
+
+@APP.route('/option3', methods=['GET', 'POST'])
+def option3():
+    """ 3rd Option """
+    print("### Home Page Loaded ###")
+    return render_template('option3.html', page="Site Sıralama")
+
+
+@APP.route('/option4', methods=['GET', 'POST'])
+def option4():
+    """ 4th Option """
+
+    print("### Home Page Loaded ###")
+    return render_template('option4.html', page="Semantik Analiz")
+
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
-    
+    PORT = int(os.environ.get("PORT", 5000))
+    APP.run(host='0.0.0.0', port=PORT)
+
 # boom!
