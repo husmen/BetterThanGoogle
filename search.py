@@ -1,15 +1,21 @@
 #import standard
 import time
+import urllib
 
 #import others
 import bs4
 import requests
 import requests_cache
+import validators
 
 # Global Variables
 term = ""
 source = ""
 COUNT_DESC = ["Title", "Description", "Keywords", "h1", "h2", "h3", "h4", "h5", "h6", "content", "URL", "TOTAL", "index"]
+
+links_tree = []
+links = []
+links_hist = set()
 
 # Setup cache
 requests_cache.install_cache('cache', backend='sqlite', expire_after=300)
@@ -35,6 +41,31 @@ def crawl(url):
     else:
         return True, None
 
+def scrap(url,depth = 0):
+    if depth == 0:
+        del links_tree[:]
+        del links[:]
+        #links_hist = {set()}
+
+    err, soup = crawl(source)
+    if err:
+        return True, None
+
+    for link in soup.find_all('a'):
+        url_tmp = link.get('href')
+        if not validators.url(url_tmp):
+            url_tmp2 = urllib.parse.urljoin(url, url_tmp)
+            if validators.url(url_tmp2):
+                url_tmp = url_tmp2
+        if url in url_tmp and url_tmp not in links_hist:
+            links.append(url_tmp)
+            links_hist.add(url_tmp)
+
+    # links_tree.append(links)
+    # print(links_tree)
+    # return(links_tree)
+    return(links)
+
 def clean_soup(soup, level=1):
     if level == 1:
         while soup.find('header'):
@@ -58,7 +89,7 @@ def clean_soup(soup, level=1):
             tmp = soup.h6.extract()
     return soup
 
-def search1(term, source):
+def search(term, source):
     """ Search Function """
     term = term.lower()
     count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
