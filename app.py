@@ -102,7 +102,11 @@ def option2():
             else:
                 for i in range(2,len(res_tmp)-1,2):
                     print("{} {} {}".format(i,index_sum,index))
-                    index += res_tmp[i]*(index_sum-res_tmp[i])/index_sum
+                    if index_sum != 0:
+                        index += res_tmp[i]*(index_sum-res_tmp[i])/index_sum
+
+            if index_sum != 0 and index == 0:
+                index = index_sum/len(terms)
             res_tmp.append(index)
             results.append(res_tmp)
         print("### RESULTS ###")
@@ -159,12 +163,25 @@ def option3():
                         res_tmp.append(count[12])
                         index_sum += count[12]
                                 #return render_template('option1.html', page="Anahtar kelime saydırma", term=term, source=source, titles=COUNT_DESC, counts=count)
-                err, src_sub = scrap(src)
+                err, sources_sub = scrap(src)
                 if err:
-                    pass
+                    print("### NOT scrapped: ###")
                 else:
                     print("### scrapped: ###")
-                    print(src_sub)
+                    print(sources_sub)
+                    for sub_src in sources_sub:
+                        if sub_src != src:
+                            term_n = 1
+                            for trm in terms:
+                                err, count = search(trm, sub_src)
+                                if err:
+                                    pass
+                                else:
+                                    res_tmp[term_n] += count[11]
+                                    res_tmp[term_n+1] += 0.5 * count[12]
+                                    index_sum += 0.5 * count[12]
+                                term_n += 2
+
             print("### INDEX ###")
             if len(terms) == 1:
                 index = res_tmp[2]
@@ -172,7 +189,11 @@ def option3():
             else:
                 for i in range(2,len(res_tmp)-1,2):
                     print("{} {} {}".format(i,index_sum,index))
-                    index += res_tmp[i]*(index_sum-res_tmp[i])/index_sum
+                    if index_sum != 0:
+                        index += res_tmp[i]*(index_sum-res_tmp[i])/index_sum
+
+            if index_sum != 0 and index == 0:
+                index = index_sum/len(terms)
             res_tmp.append(index)
             results.append(res_tmp)
         print("### RESULTS ###")

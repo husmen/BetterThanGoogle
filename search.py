@@ -18,7 +18,7 @@ links = []
 links_hist = set()
 
 # Setup cache
-requests_cache.install_cache('cache', backend='sqlite', expire_after=300)
+requests_cache.install_cache('cache', backend='sqlite', expire_after=86400)
 
 # Define functions
 def crawl(url):
@@ -35,8 +35,11 @@ def crawl(url):
     #if response.status_code == requests.codes.ok:
     if response.status_code == 200:
         print("### Time: {0} / Used Cache: {1} ###".format(now, response.from_cache))
+        print(response.encoding)
+        response.encoding = 'utf-8'
+        print(response.encoding)
         html = response.text
-        soup = bs4.BeautifulSoup(html, "html.parser")
+        soup = bs4.BeautifulSoup(html, "html.parser") #lxml-xml, lxml, html5lib
         return False, soup
     else:
         return True, None
@@ -47,13 +50,13 @@ def scrap(url,depth = 0):
         del links[:]
         #links_hist = {set()}
 
-    err, soup = crawl(source)
+    err, soup = crawl(url)
     if err:
         return True, None
 
     for link in soup.find_all('a'):
         url_tmp = link.get('href')
-        if not validators.url(url_tmp):
+        if not validators.url(str(url_tmp)):
             url_tmp2 = urllib.parse.urljoin(url, url_tmp)
             if validators.url(url_tmp2):
                 url_tmp = url_tmp2
@@ -64,7 +67,8 @@ def scrap(url,depth = 0):
     # links_tree.append(links)
     # print(links_tree)
     # return(links_tree)
-    return(links)
+    #return(links)
+    return False, links
 
 def clean_soup(soup, level=1):
     if level == 1:
@@ -99,9 +103,21 @@ def search(term, source):
     #print(soup.prettify())
     
     print("### TITLE ###")
-    source_title = soup.title.string
-    print(source_title)
-    count[0] = source_title.lower().count(term)
+    #source_title = soup.title.string
+    #print(source_title)
+    #count[0] = source_title.lower().count(term)
+    if soup.find_all('title'):
+        source_title = soup.title.string
+        # source_title0 = soup.title.prettify(formatter='utf')
+        # source_title1 = soup.title.prettify(formatter='utf-8')
+        # source_title2 = soup.title.prettify(formatter="minimal")
+        # source_title3 = soup.title.prettify(formatter='html')
+        print(source_title)
+        # print(source_title0)
+        # print(source_title1)
+        # print(source_title2)
+        # print(source_title3)
+        count[0] = source_title.lower().count(term)
 
     print("### META ###")
     meta = soup.find_all('meta')
@@ -123,18 +139,21 @@ def search(term, source):
         h = "h{}".format(i)
         header = soup.find_all(h)
         if header:
-            print(h + ":")
+            #print(h + ":")
             source_h = soup.find_all(h)
             tmp = ""
             for item in source_h:
                 tmp += item.text
             count[2+i] += tmp.lower().count(term)
-            print(source_h)
-            print(tmp.lower())
+            #print(source_h)
+            #print(tmp.lower())
 
     print("### BODY TEXT without headlines and junk ###")
     soup = clean_soup(soup, 2)
-    text = soup.body.get_text()
+    if soup.find_all('body'):
+        text = soup.body.get_text()
+    else:
+        text = soup.get_text()
     #print(text)
 
     print("### COUNT ###")
