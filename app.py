@@ -163,8 +163,8 @@ def option3():
                         res_tmp.append(count[12])
                         index_sum += count[12]
                                 #return render_template('option1.html', page="Anahtar kelime saydırma", term=term, source=source, titles=COUNT_DESC, counts=count)
-                err, sources_sub = scrap(src)
-                if err:
+                err2, sources_sub = scrap(src)
+                if err2:
                     print("### NOT scrapped: ###")
                 else:
                     print("### scrapped: ###")

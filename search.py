@@ -18,7 +18,7 @@ links = []
 links_hist = set()
 
 # Setup cache
-requests_cache.install_cache('cache', backend='sqlite', expire_after=10)
+requests_cache.install_cache('cache', backend='sqlite', expire_after=300)
 
 # Define functions
 def crawl(url):
@@ -52,6 +52,7 @@ def scrap(url,depth = 0):
 
     err, soup = crawl(url)
     if err:
+        print("######### ERROR from CRAWLER ##########")
         return True, None
 
     for link in soup.find_all('a'):
