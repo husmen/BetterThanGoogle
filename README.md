@@ -7,3 +7,4 @@ Python, Flask, Heroku
 
 # TODO
 - use a better ranking algorithm
+- translate the interface from turkish to english
